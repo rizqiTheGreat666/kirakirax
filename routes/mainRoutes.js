@@ -18,6 +18,8 @@ const getPageData = (lang, page) => {
         'about': { id: 'Tentang Kami', en: 'About Us' },
         'join': { id: 'Gabung', en: 'Join/Register' },
         'dashboard': { id: 'Dashboard', en: 'Dashboard' }
+        ,
+        'mini-games': { id: 'Mini Games', en: 'Mini Games' }
     };
     return { title: titles[page] ? titles[page][lang] || titles[page]['id'] : 'KiraX' };
 };
@@ -68,6 +70,15 @@ router.get(['/id/gabung', '/en/join'], (req, res) => {
     data.message = req.query.message || null;
     data.isError = req.query.error === 'true';
     res.render('join', data);
+});
+
+// Register Page (terpisah)
+router.get(['/id/daftar', '/en/register'], (req, res) => {
+    const lang = res.locals.lang;
+    const data = getPageData(lang, 'register');
+    data.message = req.query.message || null;
+    data.isError = req.query.error === 'true';
+    res.render('register', data);
 });
 
 // Register POST
@@ -258,6 +269,42 @@ router.post('/api/messages', ensureAuthenticated, async (req, res) => {
     } catch (error) {
         console.error('Error posting message:', error);
         res.json({ success: false, error: error.message });
+    }
+});
+
+// Mini Games Page - tampilkan halaman permainan sederhana dan saldo poin
+router.get(['/id/mini-games', '/en/mini-games'], ensureAuthenticated, (req, res) => {
+    const lang = res.locals.lang;
+    const data = getPageData(lang, 'mini-games');
+    data.message = req.query.message || null;
+    data.isError = req.query.error === 'true';
+    data.currentUser = req.user;
+    res.render('mini_games', data);
+});
+
+// API: Tukarkan skor menjadi poin (menggunakan AJAX)
+router.post('/api/mini-games/exchange', ensureAuthenticated, async (req, res) => {
+    try {
+        const score = parseInt(req.body.score, 10) || 0;
+
+        if (score <= 0) {
+            return res.json({ success: false, message: 'Invalid score or zero.' });
+        }
+
+        // Konversi skor ke poin: 10 skor = 1 poin (atur sesuai kebijakan)
+        const points = Math.floor(score / 10);
+
+        if (points <= 0) {
+            return res.json({ success: false, message: 'Score too low to convert into points.' });
+        }
+
+        // Tambahkan poin ke user
+        const updated = await User.findByIdAndUpdate(req.user._id, { $inc: { game_points: points } }, { new: true });
+
+        return res.json({ success: true, added: points, balance: updated.game_points });
+    } catch (error) {
+        console.error('Error exchanging score:', error);
+        return res.json({ success: false, message: error.message });
     }
 });
 

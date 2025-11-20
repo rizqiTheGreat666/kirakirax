@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     saldo_waktu: { type: Number, default: 0 }, // Waktu Kredit
+    game_points: { type: Number, default: 0 }, // Poin untuk mini-games
     // Kolom tambahan untuk profil (misal: skill, lokasi)
 });
 
@@ -31,7 +32,8 @@ userSchema.statics.seedAdminUser = async function() {
                 email: 'roro@pancadaya.com',
                 password: hashedPassword,
                 role: 'admin',
-                saldo_waktu: 0, 
+                saldo_waktu: 0,
+                game_points: 0,
             });
             console.log(`✅ Admin user '${adminUsername}' created successfully.`);
         } else {

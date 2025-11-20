@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KiraX | <%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- Chess libraries (chess.js + chessboard.js) -->
+    <script src="https://unpkg.com/chess.js@1.0.0/chess.min.js"></script>
+    <script src="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <!-- chessboard.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" />
+</head>
+<body>
+    <%- include('partials/header.ejs') %>
+
+    <main class="content-container">
+        <h2><%= lang === 'id' ? 'Mini Games' : 'Mini Games' %></h2>
+
+        <div style="margin-bottom:16px;">
+            <p>
+                <strong><%= lang === 'id' ? 'Poin Anda saat ini:' : 'Your Points:' %></strong>
+                <span id="points-balance"><%= currentUser && currentUser.game_points ? currentUser.game_points : 0 %></span>
+            </p>
+        </div>
+
+        <nav style="margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="game-tab btn-secondary" data-game="reaction">
+                <span class="icon" aria-hidden>
+                    <!-- stopwatch icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="#667eea"><path d="M15.07 1H8.93L8 2.5h8L15.07 1zM12 6a7 7 0 100 14 7 7 0 000-14zm0 2a5 5 0 110 10 5 5 0 010-10zm.5 2h-1v4l3 1 .5-.86-2.5-.84V10z"/></svg>
+                </span>
+                <span class="label"><%= lang === 'id' ? 'Reaksi' : 'Reaction' %></span>
+            </button>
+
+            <button class="game-tab btn-secondary" data-game="clickspeed">
+                <span class="icon" aria-hidden>
+                    <!-- mouse/click icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="#28a745"><path d="M12 2c-1.1 0-2 .9-2 2v6H8c-2.2 0-4 1.8-4 4v2h12v-2c0-2.2-1.8-4-4-4h-2V4c0-1.1-.9-2-2-2z"/></svg>
+                </span>
+                <span class="label"><%= lang === 'id' ? 'Klik Cepat' : 'Click Speed' %></span>
+            </button>
+
+            <button class="game-tab btn-secondary" data-game="memory">
+                <span class="icon" aria-hidden>
+                    <!-- memory / brain icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="#ffb020"><path d="M12 2a3 3 0 00-3 3v1H7a3 3 0 00-3 3v7a3 3 0 003 3h10a3 3 0 003-3V9a3 3 0 00-3-3h-2V5a3 3 0 00-3-3z"/></svg>
+                </span>
+                <span class="label"><%= lang === 'id' ? 'Memori' : 'Memory' %></span>
+            </button>
+
+            <button class="game-tab btn-secondary" data-game="quiz">
+                <span class="icon" aria-hidden>
+                    <!-- question/quiz icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="#764ba2"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h2c0-.6.45-1 1.07-1.75l1.2-1.23c.37-.36.73-.99.73-1.52 0-1.11-.89-2-2-2s-2 .89-2 2H9c0-2.21 1.79-4 4-4s4 1.79 4 4c0 1.1-.58 1.85-1.93 3.25z"/></svg>
+                </span>
+                <span class="label"><%= lang === 'id' ? 'Kuis' : 'Quiz' %></span>
+            </button>
+        </nav>
+
+        <section id="games-container" style="padding: 16px; border: 1px solid #ccc; border-radius:8px; background:#fff; max-width:800px;">
+            <!-- Reaction Time -->
+            <div class="game-panel" id="game-reaction" style="display:none;">
+                <h3>Reaction Time</h3>
+                <p><%= lang === 'id' ? 'Tekan tombol "Start" lalu tunggu lampu hijau, klik secepat mungkin.' : 'Press Start then wait for the green light; click as fast as you can.' %></p>
+                <button id="rtStart" class="btn-primary">Start</button>
+                <div id="rtBox" style="margin-top:12px; width:200px; height:80px; background:#ddd; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none;">-</div>
+                <p><strong><%= lang === 'id' ? 'Skor (ms):' : 'Score (ms):' %></strong> <span class="score" id="rtScore">-</span></p>
+            </div>
+
+            <!-- Click Speed -->
+            <div class="game-panel" id="game-clickspeed" style="display:none;">
+                <h3>Click Speed</h3>
+                <p><%= lang === 'id' ? 'Klik sebanyak mungkin dalam 5 detik.' : 'Click as many times as possible in 5 seconds.' %></p>
+                <button id="csStart" class="btn-primary">Start 5s</button>
+                <button id="csClick" class="btn-secondary" disabled>Click Me</button>
+                <p><strong><%= lang === 'id' ? 'Klik:' : 'Clicks:' %></strong> <span class="score" id="csCount">0</span></p>
+            </div>
+
+            <!-- Memory -->
+            <div class="game-panel" id="game-memory" style="display:none;">
+                <h3>Memory Sequence</h3>
+                <p><%= lang === 'id' ? 'Ingat urutan angka singkat dan masukkan kembali.' : 'Remember short number sequence and re-enter it.' %></p>
+                <button id="memStart" class="btn-primary">Start</button>
+                <div id="memSequence" style="margin-top:12px; font-weight:bold"></div>
+                <div id="memInputArea" style="margin-top:8px; display:none;">
+                    <input id="memAnswer" type="text" placeholder="Masukkan sequence" />
+                    <button id="memSubmit" class="btn-secondary">Submit</button>
+                </div>
+                <p><strong><%= lang === 'id' ? 'Skor:' : 'Score:' %></strong> <span class="score" id="memScore">-</span></p>
+            </div>
+
+            <!-- Quiz -->
+            <div class="game-panel" id="game-quiz" style="display:none;">
+                <h3>Quick Quiz</h3>
+                <p><%= lang === 'id' ? 'Jawab 3 pertanyaan singkat.' : 'Answer 3 short questions.' %></p>
+                <div id="quizArea">
+                    <div id="quizQuestion" style="margin-bottom:8px;"></div>
+                    <div id="quizChoices"></div>
+                    <button id="quizNext" class="btn-primary" style="display:none;margin-top:8px;">Next</button>
+                </div>
+                <p><strong><%= lang === 'id' ? 'Skor:' : 'Score:' %></strong> <span class="score" id="quizScore">-</span></p>
+            </div>
+
+            <!-- Chess -->
+            <div class="game-panel" id="game-chess" style="display:none;">
+                <h3>Chess (AI)</h3>
+                <p><%= lang === 'id' ? 'Main catur melawan AI sederhana. Menang atau menangkap raja lawan memberikan skor.' : 'Play chess against a simple AI. Winning or capturing pieces gives score.' %></p>
+                <div class="chess-container">
+                    <div class="chess-board">
+                        <div id="board" style="width:420px"></div>
+                    </div>
+                    <div class="chess-controls">
+                        <div class="chess-info"> <strong><%= lang === 'id' ? 'Skor Catur:' : 'Chess Score:' %></strong> <span id="chessScore">-</span></div>
+                        <button id="chessReset" class="btn-secondary">New Game</button>
+                        <button id="chessHint" class="btn-secondary">Hint (AI move)</button>
+                        <p style="margin-top:8px; color:#666; font-size:0.9rem;"> <%= lang === 'id' ? 'AI akan melakukan langkah acak sederhana.' : 'AI will play simple random legal moves.' %></p>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            <div style="margin-top:12px;">
+                <button id="convertBtn" class="btn-primary" disabled><%= lang === 'id' ? 'Tukar Skor menjadi Poin' : 'Convert Score to Points' %></button>
+                <span id="currentGameHidden" style="display:none;"></span>
+            </div>
+
+            <div id="exchangeResult" style="margin-top:12px;color:green"></div>
+        </section>
+
+        <p style="margin-top:20px; font-size:0.9em; color:#666;"> <%= lang === 'id' ? 'Catatan: 10 Skor = 1 Poin. Setiap game menggunakan mekanik yang berbeda untuk menghasilkan skor.' : 'Note: 10 Score = 1 Point. Each game uses different mechanics to generate a score.' %> </p>
+    </main>
+
+    <%- include('partials/footer.ejs') %>
+
+    <script>
+    (function(){
+        // Helpers & state
+        const tabs = document.querySelectorAll('.game-tab');
+        const panels = document.querySelectorAll('.game-panel');
+        const convertBtn = document.getElementById('convertBtn');
+        const resultEl = document.getElementById('exchangeResult');
+        const balanceEl = document.getElementById('points-balance');
+        let lastScore = 0;
+        let currentGame = '';
+
+        function showGame(name){
+            panels.forEach(p => p.style.display = 'none');
+            const el = document.getElementById('game-' + name);
+            if (el) el.style.display = 'block';
+            currentGame = name;
+            convertBtn.disabled = true;
+            lastScore = 0;
+            document.getElementById('currentGameHidden').textContent = name;
+            resultEl.textContent = '';
+        }
+
+        tabs.forEach(t => t.addEventListener('click', () => showGame(t.dataset.game)));
+
+        // Default show reaction
+        showGame('reaction');
+
+        // ----- Reaction Time -----
+        (() => {
+            const startBtn = document.getElementById('rtStart');
+            const box = document.getElementById('rtBox');
+            const scoreEl = document.getElementById('rtScore');
+            let waitTimeout, startTime, ready = false;
+
+            startBtn.addEventListener('click', () => {
+                scoreEl.textContent = '-';
+                box.style.background = '#ddd';
+                box.textContent = '...';
+                ready = false;
+                clearTimeout(waitTimeout);
+                const delay = 1000 + Math.random() * 3000;
+                waitTimeout = setTimeout(() => {
+                    box.style.background = 'green';
+                    box.textContent = 'CLICK!';
+                    startTime = performance.now();
+                    ready = true;
+                }, delay);
+            });
+
+            box.addEventListener('click', () => {
+                if (!ready) return; // ignore false clicks
+                const elapsed = Math.max(0, Math.round(performance.now() - startTime));
+                // Lower ms is better; convert to score inversely: faster -> more score
+                const score = Math.max(0, Math.round(2000 / (elapsed + 10)) );
+                scoreEl.textContent = elapsed + ' ms (' + score + ')';
+                lastScore = score;
+                convertBtn.disabled = false;
+                resultEl.textContent = '';
+                ready = false;
+                box.style.background = '#ddd';
+            });
+        })();
+
+        // ----- Click Speed -----
+        (() => {
+            const startBtn = document.getElementById('csStart');
+            const clickBtn = document.getElementById('csClick');
+            const countEl = document.getElementById('csCount');
+            let count = 0, timer;
+
+            startBtn.addEventListener('click', () => {
+                count = 0; countEl.textContent = 0; resultEl.textContent='';
+                clickBtn.disabled = false; startBtn.disabled = true;
+                timer = setTimeout(() => {
+                    clickBtn.disabled = true; startBtn.disabled = false;
+                    // Score = clicks
+                    lastScore = count;
+                    document.getElementById('csCount').textContent = count;
+                    convertBtn.disabled = count > 0 ? false : true;
+                }, 5000);
+            });
+
+            clickBtn.addEventListener('click', () => {
+                count++; countEl.textContent = count;
+            });
+        })();
+
+        // ----- Memory -----
+        (() => {
+            const startBtn = document.getElementById('memStart');
+            const seqEl = document.getElementById('memSequence');
+            const inputArea = document.getElementById('memInputArea');
+            const ansInput = document.getElementById('memAnswer');
+            const submitBtn = document.getElementById('memSubmit');
+            const scoreEl = document.getElementById('memScore');
+            let sequence = '';
+
+            startBtn.addEventListener('click', () => {
+                sequence = '' + Math.floor(100 + Math.random() * 900); // 3-digit
+                seqEl.textContent = sequence;
+                setTimeout(() => { seqEl.textContent = '???'; inputArea.style.display='block'; ansInput.value=''; ansInput.focus(); }, 1200);
+                scoreEl.textContent = '-'; resultEl.textContent='';
+            });
+
+            submitBtn.addEventListener('click', () => {
+                const ans = ansInput.value.trim();
+                if (ans === sequence) {
+                    lastScore = 50; // fixed reward for success
+                    scoreEl.textContent = lastScore;
+                    convertBtn.disabled = false; resultEl.textContent='';
+                } else {
+                    lastScore = 0;
+                    scoreEl.textContent = 0;
+                    convertBtn.disabled = true; resultEl.textContent='Wrong sequence';
+                }
+                inputArea.style.display='none';
+            });
+        })();
+
+        // ----- Quiz -----
+        (() => {
+            const quizQ = document.getElementById('quizQuestion');
+            const quizChoices = document.getElementById('quizChoices');
+            const quizNext = document.getElementById('quizNext');
+            const scoreEl = document.getElementById('quizScore');
+            const questions = [
+                {q:'2+2?', a:['3','4','5'], correct:1},
+                {q:'Capital of France?', a:['Paris','Rome','Madrid'], correct:0},
+                {q:'Color mix: Red+Blue?', a:['Green','Purple','Orange'], correct:1}
+            ];
+            let idx = 0, points = 0;
+
+            function render(){
+                const item = questions[idx];
+                quizQ.textContent = item.q;
+                quizChoices.innerHTML = '';
+                item.a.forEach((opt,i)=>{
+                    const btn = document.createElement('button'); btn.className='btn-secondary'; btn.style.margin='4px'; btn.textContent=opt;
+                    btn.addEventListener('click', ()=>{
+                        if (i === item.correct) { points += 20; }
+                        idx++;
+                        if (idx < questions.length) { render(); } else { finish(); }
+                    });
+                    quizChoices.appendChild(btn);
+                });
+            }
+
+            function finish(){
+                quizQ.textContent = 'Finished'; quizChoices.innerHTML=''; quizNext.style.display='none';
+                lastScore = points; scoreEl.textContent = points; convertBtn.disabled = points>0?false:true; resultEl.textContent='';
+                idx = 0; points = 0;
+            }
+
+            document.getElementById('game-quiz').addEventListener('click', ()=>{});
+            // Start quiz when panel shown
+            tabs.forEach(t=>{ if(t.dataset.game==='quiz'){ t.addEventListener('click', ()=>{ idx=0; points=0; quizNext.style.display='none'; render(); }); }});
+        })();
+
+        // ----- Chess (using chess.js + chessboard.js) -----
+        (function () {
+            const boardEl = document.getElementById('board');
+            const chessScoreEl = document.getElementById('chessScore');
+            const chessReset = document.getElementById('chessReset');
+            const chessHint = document.getElementById('chessHint');
+
+            // Ensure libraries are available
+            if (typeof Chess === 'undefined' || typeof Chessboard === 'undefined') {
+                // Libraries not loaded yet — show message
+                boardEl.innerHTML = '<div style="width:100%;height:420px;display:flex;align-items:center;justify-content:center;color:#888;background:#fafafa;border:1px dashed #ccc;">Chess libraries not loaded. Check your internet connection.</div>';
+                chessReset.addEventListener('click', () => window.location.reload());
+                chessHint.addEventListener('click', () => alert('<%= lang === "id" ? "Periksa koneksi atau muat ulang halaman." : "Please check connection or reload the page." %>'));
+                return;
+            }
+
+            const game = new Chess();
+            let board = null;
+            let sessionChessScore = 0;
+
+            const pieceValue = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+
+            function updateScore(delta) {
+                sessionChessScore += delta;
+                chessScoreEl.textContent = sessionChessScore;
+                lastScore = sessionChessScore;
+                convertBtn.disabled = sessionChessScore > 0 ? false : true;
+            }
+
+            function makeAIMove() {
+                const moves = game.moves();
+                if (moves.length === 0) return;
+                // choose random legal move
+                const mv = moves[Math.floor(Math.random() * moves.length)];
+                const result = game.move(mv);
+                board.position(game.fen());
+                // if AI captured a piece, deduct small score (player penalty) — optional
+            }
+
+            function onDrop(source, target) {
+                const move = game.move({ from: source, to: target, promotion: 'q' });
+                if (move === null) return 'snapback';
+
+                // If player captured a piece
+                if (move.captured) {
+                    const val = pieceValue[move.captured.toLowerCase()] || 1;
+                    updateScore(val * 10); // scale up to make meaningful (10 points per pawn)
+                }
+
+                // If checkmate, big bonus
+                if (game.in_checkmate()) {
+                    updateScore(200);
+                }
+
+                // Let AI play after short delay
+                setTimeout(() => {
+                    makeAIMove();
+                    if (game.in_checkmate()) {
+                        // AI won — small penalty (no negative points, just reset session)
+                        // For simplicity, do nothing additional
+                    }
+                }, 400);
+            }
+
+            function initBoard() {
+                game.reset();
+                sessionChessScore = 0;
+                chessScoreEl.textContent = 0;
+                lastScore = 0; convertBtn.disabled = true; resultEl.textContent = '';
+
+                const cfg = {
+                    draggable: true,
+                    position: 'start',
+                    onDrop: function (source, target, piece, newPos, oldPos, orientation) {
+                        const rv = onDrop(source, target);
+                        // Chessboard.js expects undefined or 'snapback' return handled by library
+                    }
+                };
+
+                if (board) board.destroy();
+                board = Chessboard(boardEl, cfg);
+            }
+
+            chessReset.addEventListener('click', initBoard);
+            chessHint.addEventListener('click', () => {
+                // Provide a sample hint: return any legal move
+                const moves = game.moves();
+                if (!moves || moves.length === 0) return alert('<%= lang === "id" ? "Tidak ada langkah legal saat ini." : "No legal moves available." %>');
+                alert('<%= lang === "id" ? "Contoh langkah: " : "Example move: " %>' + moves[0]);
+            });
+
+            initBoard();
+        })();
+
+        // ----- Convert to points (shared) -----
+        convertBtn.addEventListener('click', async () => {
+            if (!lastScore || lastScore <= 0) return;
+            convertBtn.disabled = true; resultEl.style.color='green'; resultEl.textContent='Processing...';
+            try {
+                const res = await fetch('/api/mini-games/exchange', {
+                    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ score: lastScore })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    resultEl.style.color='green'; resultEl.textContent = (data.added?('+'+data.added+' '+('<%= lang === "id" ? "poin" : "points" %>')):'') + ' - ' + ('<%= lang === "id" ? "Saldo baru:" : "New balance:" %>') + ' ' + (data.balance || 0);
+                    balanceEl.textContent = data.balance || 0;
+                } else {
+                    resultEl.style.color='red'; resultEl.textContent = data.message || 'Exchange failed.'; convertBtn.disabled=false;
+                }
+            } catch (err) {
+                resultEl.style.color='red'; resultEl.textContent='Error: '+err.message; convertBtn.disabled=false;
+            }
+        });
+
+    })();
+    </script>
+</body>
+</html>
