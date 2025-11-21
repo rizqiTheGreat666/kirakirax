@@ -108,6 +108,15 @@ io.on('connection', (socket) => {
 
 // --- 8. Jalankan Server ---
 const PORT = process.env.PORT || 3000;
+// Global handlers untuk menangkap error yang tidak tertangani dan lognya
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err && err.stack ? err.stack : err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   require('./models/userModel').seedAdminUser();

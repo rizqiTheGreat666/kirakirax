@@ -83,6 +83,7 @@ router.get(['/id/daftar', '/en/register'], (req, res) => {
 
 // Register POST
 router.post('/register', async (req, res) => {
+    console.log('POST /register body:', req.body);
     const lang = req.body.lang || res.locals.lang || 'id';
     const { username, email, password } = req.body;
 
@@ -130,6 +131,7 @@ router.post('/register', async (req, res) => {
 
 // Login POST - Menggunakan Passport
 router.post('/login', (req, res, next) => {
+    console.log('POST /login body:', req.body);
     const lang = req.body.lang || res.locals.lang || 'id';
     
     passport.authenticate('local', (err, user, info) => {
